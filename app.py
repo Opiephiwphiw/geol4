@@ -141,9 +141,7 @@ try:
         st_folium(m, width=1000, height=500)
     else:
         st.info("ระบุพิกัด (x,y หรือ lat,long) ในตารางเพื่อแสดงผลบนแผนที่")
-    else:
-        st.info("ระบุพิกัด (x,y หรือ lat,long) ในตารางเพื่อแสดงผลบนแผนที่")
-        
+ 
     # 5. แสดงตารางรายงาน
     st.subheader("📑 ข้อมูลรายละเอียดโครงการ")
     st.dataframe(filtered_df)
