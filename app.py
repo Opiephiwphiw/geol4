@@ -71,6 +71,16 @@ try:
     search_proj = st.sidebar.text_input("ชื่อโครงการ/รายงาน:")
     search_prov = st.sidebar.text_input("จังหวัด:")
     search_year = st.sidebar.selectbox("ปี:", ["ทั้งหมด"] + sorted(df['ปี'].dropna().unique().tolist(), reverse=True))
+    # ใส่ไว้ในส่วน 3. ระบบค้นหา (Sidebar)
+    st.sidebar.header("🔍 ระบบค้นหาข้อมูล")
+    
+    # --- เพิ่มปุ่มล้าง Cache ตรงนี้ ---
+    if st.sidebar.button("🔄 อัปเดตข้อมูลสดจาก Google Sheets"):
+        st.cache_data.clear()
+        st.rerun()
+    # ------------------------------
+    
+    search_proj = st.sidebar.text_input("ชื่อโครงการ/รายงาน:")
     
     # ประมวลผลการกรองข้อมูลตามที่ผู้ใช้ค้นหา
     filtered_df = df.copy()
