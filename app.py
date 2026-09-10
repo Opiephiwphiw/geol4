@@ -93,14 +93,6 @@ try:
         
         m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
         
-# 4. ส่วนแสดงแผนที่ (ใช้ API ของ OpenStreetMap ซึ่งฟรี)
-    st.subheader(f"📍 แผนที่แสดงตำแหน่งโครงการ ({len(filtered_map)} โครงการที่มีพิกัด)")
-    if not filtered_map.empty:
-        # หาจุดกึ่งกลางของแผนที่
-        center_lat = filtered_map['lat'].mean()
-        center_lon = filtered_map['long'].mean()
-        
-        m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
         
         # ปักหมุดลงบนแผนที่
         for idx, row in filtered_map.iterrows():
