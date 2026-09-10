@@ -84,7 +84,7 @@ try:
         
     filtered_map = filtered_df.dropna(subset=['lat', 'long'])
     
-    # 4. ส่วนแสดงแผนที่ (ใช้ API ของ OpenStreetMap ซึ่งฟรี)
+  # 4. ส่วนแสดงแผนที่ (ใช้ API ของ OpenStreetMap ซึ่งฟรี)
     st.subheader(f"📍 แผนที่แสดงตำแหน่งโครงการ ({len(filtered_map)} โครงการที่มีพิกัด)")
     if not filtered_map.empty:
         # หาจุดกึ่งกลางของแผนที่
@@ -93,16 +93,16 @@ try:
         
         m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
         
-        
         # ปักหมุดลงบนแผนที่
         for idx, row in filtered_map.iterrows():
             # ดึงข้อมูลและจัดการค่าว่าง (NaN)
             proj_name = str(row['โครงการ']).strip() if pd.notna(row.get('โครงการ')) else '-'
+            report_name = str(row['รายงาน']).strip() if pd.notna(row.get('รายงาน')) else '-'  # << เพิ่มข้อมูลรายงาน
             prov_name = str(row['จังหวัด']).strip() if pd.notna(row.get('จังหวัด')) else '-'
             soil_type = str(row['ดินที่พบ']).strip() if pd.notna(row.get('ดินที่พบ')) else '-'
             rock_type = str(row['หินที่พบ']).strip() if pd.notna(row.get('หินที่พบ')) else '-'
             
-            # แปลงค่าปีให้ปลอดภัย ไม่ค้างแน่นอนแม้จะเป็นข้อความหรือมีจุดทศนิยม
+            # แปลงค่าปีให้อ่านง่ายและปลอดภัย
             raw_year = row.get('ปี')
             if pd.notna(raw_year) and str(raw_year).strip() != '':
                 try:
@@ -112,10 +112,11 @@ try:
             else:
                 year_val = '-'
             
-            # สร้างข้อความสำหรับ Popup
+            # สร้างข้อความสำหรับ Popup (เพิ่มบรรทัด รายงาน:)
             popup_html = f"""
-            <div style="font-family: 'Tahoma', sans-serif; font-size: 13px; min-width: 200px; line-height: 1.5;">
+            <div style="font-family: 'Tahoma', sans-serif; font-size: 13px; min-width: 220px; line-height: 1.5;">
                 <b>โครงการ:</b> {proj_name}<br>
+                <b>รายงาน:</b> {report_name}<br>
                 <b>จังหวัด:</b> {prov_name}<br>
                 <b>ปี:</b> {year_val}<br>
                 <b>ดินที่พบ:</b> {soil_type}<br>
