@@ -8,16 +8,43 @@ import pyproj
 st.set_page_config(page_title="ระบบค้นหารายงานและแผนที่โครงการ", layout="wide")
 st.title("🗺️ ระบบฐานข้อมูลรายงานฝ่ายปฐพีและธรณีวิทยา")
 
-# 2. ฟังก์ชันดึงข้อมูลจาก Google Sheets (อัปเดตอัตโนมัติเมื่อข้อมูลเปลี่ยน)
-@st.cache_data(ttl=600) # Cache ข้อมูล 10 นาที เพื่อไม่ให้โหลดซ้ำบ่อยเกินไป
+# 2. ฟังก์ชันดึงข้อมูลจาก Google Sheets (ปรับปรุงระบบแปลงพิกัด)
+@st.cache_data(ttl=600)
 def load_data(sheet_url):
-    # แปลง Link ปกติ เป็น Link สำหรับดาวน์โหลด CSV
     csv_url = sheet_url.replace("/edit?usp=sharing", "/export?format=csv")
     df = pd.read_csv(csv_url)
     
-    # ระบบแปลงพิกัด UTM (x, y) เป็น Lat/Long 
-    # (ใช้ Zone 47N ซึ่งครอบคลุมพื้นที่ส่วนใหญ่ของไทย)
-    proj = pyproj.Proj(proj='utm', zone=47, ellps='WGS84', datum='WGS84')
+    # ใช้ Transformer ซึ่งเป็นวิธีมาตรฐานและเสถียรที่สุดใน pyproj เวอร์ชันใหม่
+    # epsg:32647 = พิกัด UTM Zone 47N (ครอบคลุมไทยส่วนใหญ่)
+    # epsg:4326 = พิกัด ละติจูด/ลองจิจูด ปกติ
+    from pyproj import Transformer
+    transformer = Transformer.from_crs("epsg:32647", "epsg:4326", always_xy=True)
+    
+    def convert_utm(row):
+        # 1. ถ้ามี lat/long อยู่แล้ว ให้ใช้ค่าเดิม
+        if pd.notna(row.get('lat')) and pd.notna(row.get('long')):
+            return pd.Series([row['lat'], row['long']])
+            
+        # 2. ถ้าไม่มี lat/long แต่มี x/y ให้แปลงพิกัด
+        if pd.notna(row.get('x')) and pd.notna(row.get('y')):
+            try:
+                # แปลงค่าเผื่อกรณีดึงมาจากชีตแล้วติดลูกน้ำ (Comma) หรือเป็นข้อความ
+                x_val = float(str(row['x']).replace(',', '').strip())
+                y_val = float(str(row['y']).replace(',', '').strip())
+                
+                # แปลงพิกัด (จะได้ผลลัพธ์เป็น ลองจิจูด, ละติจูด)
+                lon, lat = transformer.transform(x_val, y_val)
+                return pd.Series([lat, lon])
+            except Exception as e:
+                # ถ้าแปลงไม่ได้ (เช่น พิมพ์ตัวอักษรปนมา) ให้ข้ามไป
+                pass
+                
+        # 3. ถ้าไม่มีพิกัดเลย ให้เป็นค่าว่าง
+        return pd.Series([None, None])
+    
+    # สร้างคอลัมน์ lat, long ใหม่โดยเรียกใช้ฟังก์ชันด้านบน
+    df[['lat', 'long']] = df.apply(convert_utm, axis=1)
+    return df
     
     def convert_utm(row):
         # ถ้าไม่มี lat/long แต่มี x/y ให้แปลงค่า
