@@ -93,21 +93,54 @@ try:
         
         m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
         
- # ปักหมุดลงบนแผนที่
+# 4. ส่วนแสดงแผนที่ (ใช้ API ของ OpenStreetMap ซึ่งฟรี)
+    st.subheader(f"📍 แผนที่แสดงตำแหน่งโครงการ ({len(filtered_map)} โครงการที่มีพิกัด)")
+    if not filtered_map.empty:
+        # หาจุดกึ่งกลางของแผนที่
+        center_lat = filtered_map['lat'].mean()
+        center_lon = filtered_map['long'].mean()
+        
+        m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
+        
+        # ปักหมุดลงบนแผนที่
         for idx, row in filtered_map.iterrows():
-            popup_text = f"""
-            <b>โครงการ:</b> {row.get('โครงการ', '-')}<br>
-            <b>จังหวัด:</b> {row.get('จังหวัด', '-')}<br>
-            <b>ปี:</b> {row.get('ปี', '-')}
+            # ดึงข้อมูลและจัดการค่าว่าง (NaN)
+            proj_name = str(row['โครงการ']).strip() if pd.notna(row.get('โครงการ')) else '-'
+            prov_name = str(row['จังหวัด']).strip() if pd.notna(row.get('จังหวัด')) else '-'
+            soil_type = str(row['ดินที่พบ']).strip() if pd.notna(row.get('ดินที่พบ')) else '-'
+            rock_type = str(row['หินที่พบ']).strip() if pd.notna(row.get('หินที่พบ')) else '-'
+            
+            # แปลงค่าปีให้ปลอดภัย ไม่ค้างแน่นอนแม้จะเป็นข้อความหรือมีจุดทศนิยม
+            raw_year = row.get('ปี')
+            if pd.notna(raw_year) and str(raw_year).strip() != '':
+                try:
+                    year_val = str(int(float(str(raw_year).replace(',', '').strip())))
+                except:
+                    year_val = str(raw_year).strip()
+            else:
+                year_val = '-'
+            
+            # สร้างข้อความสำหรับ Popup
+            popup_html = f"""
+            <div style="font-family: 'Tahoma', sans-serif; font-size: 13px; min-width: 200px; line-height: 1.5;">
+                <b>โครงการ:</b> {proj_name}<br>
+                <b>จังหวัด:</b> {prov_name}<br>
+                <b>ปี:</b> {year_val}<br>
+                <b>ดินที่พบ:</b> {soil_type}<br>
+                <b>หินที่พบ:</b> {rock_type}
+            </div>
             """
+            
             folium.Marker(
-                [row['lat'], row['long']], 
-                popup=folium.Popup(popup_text, max_width=300),
-                tooltip=str(row.get('โครงการ', 'คลิกดูข้อมูล')),
+                location=[row['lat'], row['long']], 
+                popup=folium.Popup(popup_html, max_width=350),
+                tooltip=proj_name,
                 icon=folium.Icon(color="blue", icon="info-sign")
             ).add_to(m)
             
         st_folium(m, width=1000, height=500)
+    else:
+        st.info("ระบุพิกัด (x,y หรือ lat,long) ในตารางเพื่อแสดงผลบนแผนที่")
     else:
         st.info("ระบุพิกัด (x,y หรือ lat,long) ในตารางเพื่อแสดงผลบนแผนที่")
         
