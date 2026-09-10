@@ -93,21 +93,35 @@ try:
         
         m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
         
-        # ปักหมุดลงบนแผนที่
+       # ปักหมุดลงบนแผนที่
         for idx, row in filtered_map.iterrows():
+            # จัดการข้อมูลที่เป็น NaN (ค่าว่าง) ให้แสดงเป็นขีด (-) แทน
+            proj_name = row.get('โครงการ', '-') if pd.notna(row.get('โครงการ')) else '-'
+            prov_name = row.get('จังหวัด', '-') if pd.notna(row.get('จังหวัด')) else '-'
+            
+            # จัดการปีให้แสดงเป็นตัวเลขจำนวนเต็ม (ลบจุดทศนิยม .0 ออก)
+            year_val = str(int(row.get('ปี'))) if pd.notna(row.get('ปี')) else '-'
+            
+            soil_type = row.get('ดินที่พบ', '-') if pd.notna(row.get('ดินที่พบ')) else '-'
+            rock_type = row.get('หินที่พบ', '-') if pd.notna(row.get('หินที่พบ')) else '-'
+            
+            # เพิ่มข้อมูล ดิน และ หิน ลงใน Popup
             popup_text = f"""
-            <b>โครงการ:</b> {row.get('โครงการ', '-')}<br>
-            <b>จังหวัด:</b> {row.get('จังหวัด', '-')}<br>
-            <b>ปี:</b> {row.get('ปี', '-')}
+            <div style="font-family: Tahoma, sans-serif; min-width: 200px;">
+                <b>โครงการ:</b> {proj_name}<br>
+                <b>จังหวัด:</b> {prov_name}<br>
+                <b>ปี:</b> {year_val}<br>
+                <b>ดินที่พบ:</b> {soil_type}<br>
+                <b>หินที่พบ:</b> {rock_type}
+            </div>
             """
+            
             folium.Marker(
                 [row['lat'], row['long']], 
-                popup=folium.Popup(popup_text, max_width=300),
-                tooltip=str(row.get('โครงการ', 'คลิกดูข้อมูล')),
+                popup=folium.Popup(popup_text, max_width=400), # ขยาย max_width เผื่อข้อความยาว
+                tooltip=str(proj_name),
                 icon=folium.Icon(color="blue", icon="info-sign")
             ).add_to(m)
-            
-        st_folium(m, width=1000, height=500)
     else:
         st.info("ระบุพิกัด (x,y หรือ lat,long) ในตารางเพื่อแสดงผลบนแผนที่")
         
