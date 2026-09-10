@@ -122,8 +122,6 @@ try:
                 tooltip=str(proj_name),
                 icon=folium.Icon(color="blue", icon="info-sign")
             ).add_to(m)
-    else:
-        st.info("ระบุพิกัด (x,y หรือ lat,long) ในตารางเพื่อแสดงผลบนแผนที่")
         
     # 5. แสดงตารางรายงาน
     st.subheader("📑 ข้อมูลรายละเอียดโครงการ")
